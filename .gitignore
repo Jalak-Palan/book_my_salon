@@ -1,0 +1,46 @@
+# dependencies
+node_modules/
+server/node_modules/
+stock-management-app/node_modules/
+
+# Expo / Frontend
+stock-management-app/.expo/
+stock-management-app/dist/
+stock-management-app/web-build/
+stock-management-app/expo-env.d.ts
+stock-management-app/ios/
+stock-management-app/android/
+
+# Metro
+.metro-health-check*
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# Environment files / Secrets
+.env
+.env.local
+.env*.local
+server/.env
+stock-management-app/.env
+
+# Native Keys
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# typescript
+*.tsbuildinfo
