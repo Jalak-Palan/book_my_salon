@@ -1,8 +1,10 @@
 import React, { useRef } from 'react';
-import { StyleSheet, Text, TouchableWithoutFeedback, Animated } from 'react-native';
+import { StyleSheet, Text, TouchableWithoutFeedback, Animated, View } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { normalize, MIN_TOUCH_SIZE } from '../utils/dimensions';
 
-export const CustomButton = ({ title, onPress, type = 'primary', style, textStyle, icon, disabled = false }) => {
+export const CustomButton = ({ title, onPress, type = 'primary', style, textStyle, icon, iconName, disabled = false }) => {
   const theme = useTheme();
   const scaleValue = useRef(new Animated.Value(1)).current;
 
@@ -11,6 +13,8 @@ export const CustomButton = ({ title, onPress, type = 'primary', style, textStyl
     Animated.spring(scaleValue, {
       toValue: 0.96,
       useNativeDriver: true,
+      speed: 20,
+      bounciness: 4,
     }).start();
   };
 
@@ -27,7 +31,7 @@ export const CustomButton = ({ title, onPress, type = 'primary', style, textStyl
   const getColors = () => {
     if (disabled) {
       return {
-        bg: theme.colors.outline,
+        bg: theme.colors.outline + '60',
         text: theme.colors.onSurfaceVariant,
       };
     }
@@ -70,6 +74,8 @@ export const CustomButton = ({ title, onPress, type = 'primary', style, textStyl
       onPress={disabled ? null : onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
     >
       <Animated.View
         style={[
@@ -77,15 +83,21 @@ export const CustomButton = ({ title, onPress, type = 'primary', style, textStyl
           {
             backgroundColor: colors.bg,
             borderColor: colors.border || 'transparent',
-            borderWidth: colors.border ? 1 : 0,
+            borderWidth: colors.border ? 1.5 : 0,
             transform: [{ scale: scaleValue }],
             borderRadius: theme.roundness,
+            opacity: disabled ? 0.6 : 1,
           },
           style,
         ]}
       >
-        {icon && <Animated.View style={styles.iconContainer}>{icon}</Animated.View>}
-        <Text style={[styles.text, { color: colors.text }, textStyle]}>
+        {iconName && (
+          <View style={styles.iconContainer}>
+            <MaterialCommunityIcons name={iconName} size={18} color={colors.text} />
+          </View>
+        )}
+        {icon && <View style={styles.iconContainer}>{icon}</View>}
+        <Text style={[styles.text, { color: colors.text, fontSize: normalize(15) }, textStyle]}>
           {title}
         </Text>
       </Animated.View>
@@ -95,22 +107,21 @@ export const CustomButton = ({ title, onPress, type = 'primary', style, textStyl
 
 const styles = StyleSheet.create({
   button: {
-    height: 48,
+    height: Math.max(52, MIN_TOUCH_SIZE),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     marginVertical: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
   },
   text: {
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    letterSpacing: 0.4,
   },
   iconContainer: {
     marginRight: 8,

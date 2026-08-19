@@ -1,14 +1,17 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { StyleSheet, View, Text, FlatList } from 'react-native';
-import { useTheme, FAB } from 'react-native-paper';
+import { useTheme, FAB, Platform } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { AppContext } from '../context/AppContext';
 import { EmptyState } from '../components/EmptyState';
 import { CustomCard } from '../components/CustomCard';
+import { SearchBar } from '../components/SearchBar';
+import { normalize, SCREEN_PADDING } from '../utils/dimensions';
 
 export default function SalesListScreen({ navigation }) {
   const theme = useTheme();
   const { sales, currency } = useContext(AppContext);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const formatCurrency = (val) => {
     const symbol = currency === 'INR' ? '₹' : currency === 'EUR' ? '€' : '$';
@@ -24,43 +27,68 @@ export default function SalesListScreen({ navigation }) {
     }
   };
 
+  const filteredSales = sales.filter((s) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      s.product?.toLowerCase().includes(q) ||
+      s.invoiceNo?.toLowerCase().includes(q) ||
+      s.customer?.toLowerCase().includes(q)
+    );
+  });
+
   const renderSaleItem = ({ item }) => {
     return (
       <CustomCard
         onPress={() => navigation.navigate('InvoicePreview', { saleId: item.id })}
         style={styles.card}
       >
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <MaterialCommunityIcons name="arrow-up-bold-box" size={24} color={theme.colors.success} />
-            <View style={styles.headerText}>
-              <Text style={[styles.productName, { color: theme.colors.onSurface }]} numberOfLines={1}>
-                {item.product} (x{item.quantity})
-              </Text>
-              <Text style={[styles.invoiceNo, { color: theme.colors.primary }]}>
-                {item.invoiceNo}
-              </Text>
-            </View>
-          </View>
-          <Text style={[styles.total, { color: theme.colors.success }]}>
-            +{formatCurrency(item.total)}
-          </Text>
-        </View>
+        {/* Green left accent border */}
+        <View style={[styles.accentBorder, { backgroundColor: theme.colors.success }]} />
 
-        <View style={[styles.details, { borderTopColor: theme.colors.outline + '40' }]}>
-          <View style={styles.row}>
-            <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant }]}>Customer</Text>
-            <Text style={[styles.detailValue, { color: theme.colors.onSurface }]}>{item.customer}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant }]}>Payment Method</Text>
-            <View style={[styles.payBadge, { backgroundColor: theme.colors.primaryContainer }]}>
-              <Text style={[styles.payBadgeText, { color: theme.colors.primary }]}>{item.paymentMethod}</Text>
+        <View style={styles.cardContent}>
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <View style={[styles.iconWrap, { backgroundColor: theme.colors.success + '18' }]}>
+                <MaterialCommunityIcons name="arrow-up-bold-box" size={22} color={theme.colors.success} />
+              </View>
+              <View style={styles.headerText}>
+                <Text style={[styles.productName, { color: theme.colors.onSurface, fontSize: normalize(15) }]} numberOfLines={1}>
+                  {item.product} (x{item.quantity})
+                </Text>
+                <Text style={[styles.invoiceNo, { color: theme.colors.primary, fontSize: normalize(12) }]}>
+                  {item.invoiceNo}
+                </Text>
+              </View>
             </View>
+            <Text style={[styles.total, { color: theme.colors.success, fontSize: normalize(16) }]}>
+              +{formatCurrency(item.total)}
+            </Text>
           </View>
-          <View style={styles.row}>
-            <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant }]}>Date</Text>
-            <Text style={[styles.detailValue, { color: theme.colors.onSurfaceVariant }]}>{formatDate(item.date)}</Text>
+
+          <View style={[styles.details, { borderTopColor: theme.colors.outline + '40' }]}>
+            <View style={styles.row}>
+              <View style={styles.detailLabelRow}>
+                <MaterialCommunityIcons name="account-outline" size={13} color={theme.colors.onSurfaceVariant} style={{ marginRight: 4 }} />
+                <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant, fontSize: normalize(12) }]}>Customer</Text>
+              </View>
+              <Text style={[styles.detailValue, { color: theme.colors.onSurface, fontSize: normalize(12) }]}>{item.customer}</Text>
+            </View>
+            <View style={styles.row}>
+              <View style={styles.detailLabelRow}>
+                <MaterialCommunityIcons name="credit-card-outline" size={13} color={theme.colors.onSurfaceVariant} style={{ marginRight: 4 }} />
+                <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant, fontSize: normalize(12) }]}>Payment</Text>
+              </View>
+              <View style={[styles.payBadge, { backgroundColor: theme.colors.primaryContainer }]}>
+                <Text style={[styles.payBadgeText, { color: theme.colors.primary, fontSize: normalize(11) }]}>{item.paymentMethod}</Text>
+              </View>
+            </View>
+            <View style={styles.row}>
+              <View style={styles.detailLabelRow}>
+                <MaterialCommunityIcons name="calendar-outline" size={13} color={theme.colors.onSurfaceVariant} style={{ marginRight: 4 }} />
+                <Text style={[styles.detailLabel, { color: theme.colors.onSurfaceVariant, fontSize: normalize(12) }]}>Date</Text>
+              </View>
+              <Text style={[styles.detailValue, { color: theme.colors.onSurfaceVariant, fontSize: normalize(12) }]}>{formatDate(item.date)}</Text>
+            </View>
           </View>
         </View>
       </CustomCard>
@@ -69,8 +97,15 @@ export default function SalesListScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SearchBar
+        placeholder="Search by product, invoice, customer..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        style={styles.searchBar}
+      />
+
       <FlatList
-        data={sales}
+        data={filteredSales}
         renderItem={renderSaleItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
@@ -78,10 +113,14 @@ export default function SalesListScreen({ navigation }) {
         ListEmptyComponent={
           <EmptyState
             icon="cash-register"
-            title="No Sales Logged"
-            description="Sell products and record invoices for customers to start generating revenue."
-            actionTitle="Record Sale"
-            onActionPress={() => navigation.navigate('AddSale')}
+            title={searchQuery ? 'No Results Found' : 'No Sales Logged'}
+            description={
+              searchQuery
+                ? `No sales match "${searchQuery}".`
+                : 'Sell products and record invoices for customers to start generating revenue.'
+            }
+            actionTitle={searchQuery ? undefined : 'Record Sale'}
+            onActionPress={searchQuery ? undefined : () => navigation.navigate('AddSale')}
           />
         }
       />
@@ -91,6 +130,7 @@ export default function SalesListScreen({ navigation }) {
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         color="#ffffff"
         onPress={() => navigation.navigate('AddSale')}
+        size="medium"
       />
     </View>
   );
@@ -100,12 +140,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  searchBar: {
+    marginHorizontal: SCREEN_PADDING,
+    marginTop: 12,
+    marginBottom: 2,
+  },
   listContainer: {
-    padding: 16,
-    paddingBottom: 80,
+    paddingHorizontal: SCREEN_PADDING,
+    paddingBottom: 96,
+    paddingTop: 4,
   },
   card: {
     marginVertical: 6,
+    overflow: 'hidden',
+    paddingLeft: 0,
+  },
+  accentBorder: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
+  cardContent: {
+    paddingLeft: 16,
   },
   header: {
     flexDirection: 'row',
@@ -118,22 +178,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   headerText: {
-    marginLeft: 12,
     flex: 1,
   },
   productName: {
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   invoiceNo: {
-    fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
   },
   total: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    marginLeft: 8,
   },
   details: {
     borderTopWidth: 1,
@@ -145,21 +210,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 4,
   },
+  detailLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   detailLabel: {
-    fontSize: 12,
+    fontWeight: '500',
   },
   detailValue: {
-    fontSize: 12,
     fontWeight: '600',
   },
   payBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
   payBadgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   fab: {
     position: 'absolute',

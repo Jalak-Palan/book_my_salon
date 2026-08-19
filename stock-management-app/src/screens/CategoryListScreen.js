@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { StyleSheet, View, Text, FlatList, Pressable, Modal, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Pressable, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useTheme, FAB, Button, Switch, Divider } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useForm, Controller } from 'react-hook-form';
@@ -8,6 +8,7 @@ import { CustomInput } from '../components/CustomInput';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { EmptyState } from '../components/EmptyState';
 import { CustomCard } from '../components/CustomCard';
+import { normalize, MIN_TOUCH_SIZE, SCREEN_PADDING } from '../utils/dimensions';
 
 export default function CategoryListScreen() {
   const theme = useTheme();
@@ -78,23 +79,48 @@ export default function CategoryListScreen() {
     return (
       <CustomCard style={styles.card}>
         <View style={styles.row}>
+          <View style={[styles.catIconWrap, { backgroundColor: isActive ? theme.colors.primaryContainer : theme.colors.surfaceVariant }]}>
+            <MaterialCommunityIcons
+              name="tag-outline"
+              size={20}
+              color={isActive ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            />
+          </View>
           <View style={styles.info}>
-            <Text style={[styles.name, { color: theme.colors.onSurface }]}>{item.name}</Text>
+            <Text style={[styles.name, { color: theme.colors.onSurface, fontSize: normalize(15) }]}>{item.name}</Text>
             {item.description ? (
-              <Text style={[styles.description, { color: theme.colors.onSurfaceVariant }]}>{item.description}</Text>
+              <Text style={[styles.description, { color: theme.colors.onSurfaceVariant, fontSize: normalize(13) }]}>{item.description}</Text>
             ) : null}
-            <View style={[styles.badge, { backgroundColor: isActive ? theme.colors.success + '15' : theme.colors.outline }]}>
-              <Text style={[styles.badgeText, { color: isActive ? theme.colors.success : theme.colors.onSurfaceVariant }]}>
+            <View style={[styles.badge, { backgroundColor: isActive ? theme.colors.success + '18' : theme.colors.outline + '50' }]}>
+              <MaterialCommunityIcons
+                name={isActive ? 'check-circle-outline' : 'pause-circle-outline'}
+                size={11}
+                color={isActive ? theme.colors.success : theme.colors.onSurfaceVariant}
+                style={{ marginRight: 3 }}
+              />
+              <Text style={[styles.badgeText, { color: isActive ? theme.colors.success : theme.colors.onSurfaceVariant, fontSize: normalize(10) }]}>
                 {item.status}
               </Text>
             </View>
           </View>
           <View style={styles.actions}>
-            <Pressable onPress={() => openEditModal(item)} style={styles.actionBtn}>
-              <MaterialCommunityIcons name="pencil-outline" size={22} color={theme.colors.primary} />
+            <Pressable
+              onPress={() => openEditModal(item)}
+              style={styles.actionBtn}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <View style={[styles.actionBtnInner, { backgroundColor: theme.colors.primary + '15' }]}>
+                <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.colors.primary} />
+              </View>
             </Pressable>
-            <Pressable onPress={() => openDeleteDialog(item)} style={styles.actionBtn}>
-              <MaterialCommunityIcons name="trash-can-outline" size={22} color={theme.colors.error} />
+            <Pressable
+              onPress={() => openDeleteDialog(item)}
+              style={styles.actionBtn}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <View style={[styles.actionBtnInner, { backgroundColor: theme.colors.error + '15' }]}>
+                <MaterialCommunityIcons name="trash-can-outline" size={18} color={theme.colors.error} />
+              </View>
             </Pressable>
           </View>
         </View>
@@ -135,10 +161,18 @@ export default function CategoryListScreen() {
         transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <Pressable style={styles.backdrop} onPress={() => setModalVisible(false)} />
           <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]}>
+            {/* Drag Handle */}
+            <View style={styles.dragHandleWrapper}>
+              <View style={[styles.dragHandle, { backgroundColor: theme.colors.outline + '80' }]} />
+            </View>
+
+            <Text style={[styles.modalTitle, { color: theme.colors.onSurface, fontSize: normalize(18) }]}>
               {editingCategory ? 'Edit Category' : 'Create Category'}
             </Text>
             <Divider style={{ marginBottom: 16 }} />
@@ -177,8 +211,8 @@ export default function CategoryListScreen() {
               />
 
               <View style={styles.switchRow}>
-                <Text style={[styles.switchLabel, { color: theme.colors.onSurface }]}>
-                  Status: {categoryStatus}
+                <Text style={[styles.switchLabel, { color: theme.colors.onSurface, fontSize: normalize(14) }]}>
+                  Status: <Text style={{ color: categoryStatus === 'Active' ? theme.colors.success : theme.colors.error, fontWeight: '700' }}>{categoryStatus}</Text>
                 </Text>
                 <Switch
                   value={categoryStatus === 'Active'}
@@ -188,16 +222,28 @@ export default function CategoryListScreen() {
               </View>
 
               <View style={styles.modalActions}>
-                <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.modalBtn}>
+                <Button
+                  mode="outlined"
+                  onPress={() => setModalVisible(false)}
+                  style={styles.modalBtn}
+                  contentStyle={styles.modalBtnContent}
+                  labelStyle={{ fontSize: normalize(14), fontWeight: '600' }}
+                >
                   Cancel
                 </Button>
-                <Button mode="contained" onPress={handleSubmit(onSubmit)} style={styles.modalBtn}>
+                <Button
+                  mode="contained"
+                  onPress={handleSubmit(onSubmit)}
+                  style={styles.modalBtn}
+                  contentStyle={styles.modalBtnContent}
+                  labelStyle={{ fontSize: normalize(14), fontWeight: '700' }}
+                >
                   Save
                 </Button>
               </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <ConfirmationDialog
@@ -219,8 +265,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContainer: {
-    padding: 16,
-    paddingBottom: 80,
+    padding: SCREEN_PADDING,
+    paddingBottom: 96,
   },
   card: {
     marginVertical: 6,
@@ -230,35 +276,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  catIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   info: {
     flex: 1,
   },
   name: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: 4,
   },
   description: {
-    fontSize: 13,
     lineHeight: 18,
     marginBottom: 8,
   },
   badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 12,
   },
   badgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   actions: {
     flexDirection: 'row',
-    marginLeft: 12,
+    marginLeft: 8,
+    gap: 8,
   },
   actionBtn: {
-    padding: 8,
+    minWidth: MIN_TOUCH_SIZE,
+    minHeight: MIN_TOUCH_SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionBtnInner: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fab: {
     position: 'absolute',
@@ -272,18 +336,29 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  dragHandleWrapper: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
   },
   modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '75%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: SCREEN_PADDING,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    maxHeight: '80%',
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: 10,
+    marginTop: 4,
   },
   switchRow: {
     flexDirection: 'row',
@@ -293,7 +368,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   switchLabel: {
-    fontSize: 14,
     fontWeight: '600',
   },
   modalActions: {
@@ -301,9 +375,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
     marginBottom: 16,
+    gap: 12,
   },
   modalBtn: {
     flex: 1,
-    marginHorizontal: 6,
+  },
+  modalBtnContent: {
+    height: 48,
   },
 });

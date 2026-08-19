@@ -8,6 +8,7 @@ import { FilterModal } from '../components/FilterModal';
 import { EmptyState } from '../components/EmptyState';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { CustomCard } from '../components/CustomCard';
+import { normalize, MIN_TOUCH_SIZE, SCREEN_PADDING } from '../utils/dimensions';
 
 export default function ProductListScreen({ navigation }) {
   const theme = useTheme();
@@ -107,35 +108,35 @@ export default function ProductListScreen({ navigation }) {
             <Image source={{ uri: item.image }} style={styles.productImage} />
           ) : (
             <View style={[styles.imagePlaceholder, { backgroundColor: theme.colors.surfaceVariant }]}>
-              <MaterialCommunityIcons name="cube-outline" size={28} color={theme.colors.onSurfaceVariant} />
+              <MaterialCommunityIcons name="cube-outline" size={30} color={theme.colors.primary + '80'} />
             </View>
           )}
 
           <View style={styles.itemDetails}>
-            <Text style={[styles.name, { color: theme.colors.onSurface }]} numberOfLines={1}>
+            <Text style={[styles.name, { color: theme.colors.onSurface, fontSize: normalize(15) }]} numberOfLines={1}>
               {item.name}
             </Text>
-            <Text style={[styles.sku, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+            <Text style={[styles.sku, { color: theme.colors.onSurfaceVariant, fontSize: normalize(12) }]} numberOfLines={1}>
               SKU: {item.sku} • {item.brand}
             </Text>
-            <Text style={[styles.category, { color: theme.colors.primary }]}>{item.category}</Text>
+            <Text style={[styles.category, { color: theme.colors.primary, fontSize: normalize(11) }]}>{item.category}</Text>
 
             <View style={styles.priceRow}>
-              <Text style={[styles.price, { color: theme.colors.onSurface }]}>
+              <Text style={[styles.price, { color: theme.colors.onSurface, fontSize: normalize(15) }]}>
                 {formatCurrency(item.sellingPrice)}
               </Text>
               <View style={styles.badgeRow}>
                 {isOutOfStock ? (
-                  <View style={[styles.badge, { backgroundColor: theme.colors.error + '15' }]}>
-                    <Text style={[styles.badgeText, { color: theme.colors.error }]}>Out of Stock</Text>
+                  <View style={[styles.badge, { backgroundColor: theme.colors.error + '18' }]}>
+                    <Text style={[styles.badgeText, { color: theme.colors.error, fontSize: normalize(10) }]}>Out of Stock</Text>
                   </View>
                 ) : isLowStock ? (
-                  <View style={[styles.badge, { backgroundColor: theme.colors.warning + '15' }]}>
-                    <Text style={[styles.badgeText, { color: theme.colors.warning }]}>Low Stock ({item.quantity})</Text>
+                  <View style={[styles.badge, { backgroundColor: theme.colors.warning + '18' }]}>
+                    <Text style={[styles.badgeText, { color: theme.colors.warning, fontSize: normalize(10) }]}>Low ({item.quantity})</Text>
                   </View>
                 ) : (
-                  <View style={[styles.badge, { backgroundColor: theme.colors.success + '15' }]}>
-                    <Text style={[styles.badgeText, { color: theme.colors.success }]}>Qty: {item.quantity} {item.unit}</Text>
+                  <View style={[styles.badge, { backgroundColor: theme.colors.success + '18' }]}>
+                    <Text style={[styles.badgeText, { color: theme.colors.success, fontSize: normalize(10) }]}>{item.quantity} {item.unit}</Text>
                   </View>
                 )}
               </View>
@@ -146,11 +147,20 @@ export default function ProductListScreen({ navigation }) {
             <Pressable
               onPress={() => navigation.navigate('AddEditProduct', { productId: item.id })}
               style={styles.actionBtn}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
-              <MaterialCommunityIcons name="pencil-outline" size={20} color={theme.colors.primary} />
+              <View style={[styles.actionBtnInner, { backgroundColor: theme.colors.primary + '15' }]}>
+                <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.colors.primary} />
+              </View>
             </Pressable>
-            <Pressable onPress={() => handleDeletePress(item)} style={styles.actionBtn}>
-              <MaterialCommunityIcons name="trash-can-outline" size={20} color={theme.colors.error} />
+            <Pressable
+              onPress={() => handleDeletePress(item)}
+              style={styles.actionBtn}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <View style={[styles.actionBtnInner, { backgroundColor: theme.colors.error + '15' }]}>
+                <MaterialCommunityIcons name="trash-can-outline" size={18} color={theme.colors.error} />
+              </View>
             </Pressable>
           </View>
         </View>
@@ -216,6 +226,7 @@ export default function ProductListScreen({ navigation }) {
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         color="#ffffff"
         onPress={() => navigation.navigate('AddEditProduct')}
+        size="medium"
       />
 
       <FilterModal
@@ -270,15 +281,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   productImage: {
-    width: 76,
-    height: 76,
-    borderRadius: 8,
+    width: 80,
+    height: 80,
+    borderRadius: 12,
     resizeMode: 'cover',
   },
   imagePlaceholder: {
-    width: 76,
-    height: 76,
-    borderRadius: 8,
+    width: 80,
+    height: 80,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -327,11 +338,21 @@ const styles = StyleSheet.create({
   },
   actionColumn: {
     justifyContent: 'space-between',
-    height: 70,
+    height: 76,
     marginLeft: 8,
   },
   actionBtn: {
-    padding: 6,
+    minWidth: MIN_TOUCH_SIZE,
+    minHeight: MIN_TOUCH_SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionBtnInner: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fab: {
     position: 'absolute',

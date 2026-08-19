@@ -1,6 +1,8 @@
 import React from 'react';
-import { StyleSheet, View, Text, Modal, Pressable } from 'react-native';
+import { StyleSheet, View, Text, Modal, Pressable, Platform } from 'react-native';
 import { useTheme, Button } from 'react-native-paper';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { normalize, MIN_TOUCH_SIZE } from '../utils/dimensions';
 
 export const ConfirmationDialog = ({
   visible,
@@ -23,11 +25,49 @@ export const ConfirmationDialog = ({
     >
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onCancel} />
-        <View style={[styles.dialog, { backgroundColor: theme.colors.surface, borderRadius: theme.roundness }]}>
-          <Text style={[styles.title, { color: theme.colors.onSurface }]}>{title}</Text>
-          <Text style={[styles.message, { color: theme.colors.onSurfaceVariant }]}>{message}</Text>
+        <View
+          style={[
+            styles.dialog,
+            {
+              backgroundColor: theme.colors.surface,
+              borderRadius: theme.roundness + 4,
+            },
+          ]}
+        >
+          {/* Icon */}
+          <View
+            style={[
+              styles.iconWrapper,
+              {
+                backgroundColor: isDanger
+                  ? theme.colors.error + '15'
+                  : theme.colors.primary + '15',
+              },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name={isDanger ? 'alert-circle-outline' : 'help-circle-outline'}
+              size={32}
+              color={isDanger ? theme.colors.error : theme.colors.primary}
+            />
+          </View>
+
+          <Text style={[styles.title, { color: theme.colors.onSurface, fontSize: normalize(18) }]}>
+            {title}
+          </Text>
+          <Text style={[styles.message, { color: theme.colors.onSurfaceVariant, fontSize: normalize(14) }]}>
+            {message}
+          </Text>
+
+          {/* Actions */}
           <View style={styles.actions}>
-            <Button mode="text" onPress={onCancel} style={styles.btn}>
+            <Button
+              mode="outlined"
+              onPress={onCancel}
+              style={styles.btn}
+              contentStyle={styles.btnContent}
+              labelStyle={{ fontSize: normalize(14), fontWeight: '600' }}
+            >
               {cancelLabel}
             </Button>
             <Button
@@ -36,6 +76,8 @@ export const ConfirmationDialog = ({
               buttonColor={isDanger ? theme.colors.error : theme.colors.primary}
               textColor="#ffffff"
               style={styles.btn}
+              contentStyle={styles.btnContent}
+              labelStyle={{ fontSize: normalize(14), fontWeight: '700' }}
             >
               {confirmLabel}
             </Button>
@@ -54,33 +96,47 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   dialog: {
-    width: '85%',
-    maxWidth: 340,
-    padding: 20,
+    width: '88%',
+    maxWidth: 360,
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  iconWrapper: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    textAlign: 'center',
     marginBottom: 8,
   },
   message: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 20,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 24,
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    width: '100%',
+    gap: 12,
   },
   btn: {
-    marginLeft: 8,
+    flex: 1,
+  },
+  btnContent: {
+    height: 46,
   },
 });

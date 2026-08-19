@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, View, Text, Modal, Pressable, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Modal, Pressable, ScrollView, Platform } from 'react-native';
 import { useTheme, Button } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { MIN_TOUCH_SIZE, normalize, SCREEN_PADDING } from '../utils/dimensions';
 
 export const FilterModal = ({
   visible,
@@ -26,20 +27,43 @@ export const FilterModal = ({
     >
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
-        <View style={[styles.content, { backgroundColor: theme.colors.surface }]}>
+        <View
+          style={[
+            styles.content,
+            {
+              backgroundColor: theme.colors.surface,
+              paddingBottom: Platform.OS === 'ios' ? 30 : 20,
+            },
+          ]}
+        >
+          {/* Drag handle indicator */}
+          <View style={styles.dragHandleWrapper}>
+            <View style={[styles.dragHandle, { backgroundColor: theme.colors.outline + '80' }]} />
+          </View>
+
           {/* Header */}
-          <View style={[styles.header, { borderBottomColor: theme.colors.outline }]}>
-            <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>Filter & Sort</Text>
-            <Pressable onPress={onClose}>
-              <MaterialCommunityIcons name="close" size={24} color={theme.colors.onSurface} />
+          <View style={[styles.header, { borderBottomColor: theme.colors.outline + '50' }]}>
+            <Text style={[styles.headerTitle, { color: theme.colors.onSurface, fontSize: normalize(18) }]}>
+              Filter & Sort
+            </Text>
+            <Pressable
+              onPress={onClose}
+              style={styles.closeBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <View style={[styles.closeBtnInner, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <MaterialCommunityIcons name="close" size={18} color={theme.colors.onSurface} />
+              </View>
             </Pressable>
           </View>
 
-          <ScrollView style={styles.scrollBody}>
+          <ScrollView style={styles.scrollBody} showsVerticalScrollIndicator={false}>
             {/* Sort Section */}
             {sortOptions.length > 0 && (
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>Sort By</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant, fontSize: normalize(12) }]}>
+                  Sort By
+                </Text>
                 <View style={styles.chipContainer}>
                   {sortOptions.map((option) => {
                     const isSelected = selectedSort === option.value;
@@ -50,18 +74,29 @@ export const FilterModal = ({
                         style={[
                           styles.chip,
                           {
-                            backgroundColor: isSelected ? theme.colors.primaryContainer : theme.colors.surfaceVariant,
+                            backgroundColor: isSelected
+                              ? theme.colors.primary
+                              : theme.colors.surfaceVariant,
                             borderColor: isSelected ? theme.colors.primary : 'transparent',
-                            borderWidth: 1,
+                            borderWidth: 1.5,
                           },
                         ]}
                       >
+                        {isSelected && (
+                          <MaterialCommunityIcons
+                            name="check"
+                            size={13}
+                            color="#ffffff"
+                            style={{ marginRight: 4 }}
+                          />
+                        )}
                         <Text
                           style={[
                             styles.chipText,
                             {
-                              color: isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant,
-                              fontWeight: isSelected ? '600' : '400',
+                              color: isSelected ? '#ffffff' : theme.colors.onSurfaceVariant,
+                              fontWeight: isSelected ? '700' : '400',
+                              fontSize: normalize(13),
                             },
                           ]}
                         >
@@ -77,25 +112,38 @@ export const FilterModal = ({
             {/* Category Filter Section */}
             {categories.length > 0 && (
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>Category</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant, fontSize: normalize(12) }]}>
+                  Category
+                </Text>
                 <View style={styles.chipContainer}>
                   <Pressable
                     onPress={() => setSelectedCategory(null)}
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: selectedCategory === null ? theme.colors.primaryContainer : theme.colors.surfaceVariant,
-                        borderColor: selectedCategory === null ? theme.colors.primary : 'transparent',
-                        borderWidth: 1,
+                        backgroundColor: selectedCategory === null
+                          ? theme.colors.secondary
+                          : theme.colors.surfaceVariant,
+                        borderColor: selectedCategory === null ? theme.colors.secondary : 'transparent',
+                        borderWidth: 1.5,
                       },
                     ]}
                   >
+                    {selectedCategory === null && (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={13}
+                        color="#ffffff"
+                        style={{ marginRight: 4 }}
+                      />
+                    )}
                     <Text
                       style={[
                         styles.chipText,
                         {
-                          color: selectedCategory === null ? theme.colors.primary : theme.colors.onSurfaceVariant,
-                          fontWeight: selectedCategory === null ? '600' : '400',
+                          color: selectedCategory === null ? '#ffffff' : theme.colors.onSurfaceVariant,
+                          fontWeight: selectedCategory === null ? '700' : '400',
+                          fontSize: normalize(13),
                         },
                       ]}
                     >
@@ -112,18 +160,29 @@ export const FilterModal = ({
                         style={[
                           styles.chip,
                           {
-                            backgroundColor: isSelected ? theme.colors.primaryContainer : theme.colors.surfaceVariant,
-                            borderColor: isSelected ? theme.colors.primary : 'transparent',
-                            borderWidth: 1,
+                            backgroundColor: isSelected
+                              ? theme.colors.secondary
+                              : theme.colors.surfaceVariant,
+                            borderColor: isSelected ? theme.colors.secondary : 'transparent',
+                            borderWidth: 1.5,
                           },
                         ]}
                       >
+                        {isSelected && (
+                          <MaterialCommunityIcons
+                            name="check"
+                            size={13}
+                            color="#ffffff"
+                            style={{ marginRight: 4 }}
+                          />
+                        )}
                         <Text
                           style={[
                             styles.chipText,
                             {
-                              color: isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant,
-                              fontWeight: isSelected ? '600' : '400',
+                              color: isSelected ? '#ffffff' : theme.colors.onSurfaceVariant,
+                              fontWeight: isSelected ? '700' : '400',
+                              fontSize: normalize(13),
                             },
                           ]}
                         >
@@ -138,13 +197,16 @@ export const FilterModal = ({
           </ScrollView>
 
           {/* Footer Actions */}
-          <View style={[styles.footer, { borderTopColor: theme.colors.outline }]}>
+          <View style={[styles.footer, { borderTopColor: theme.colors.outline + '50' }]}>
             <Button
               mode="outlined"
               onPress={() => {
                 if (onReset) onReset();
               }}
               style={styles.footerBtn}
+              contentStyle={styles.footerBtnContent}
+              labelStyle={{ fontSize: normalize(14), fontWeight: '600' }}
+              icon="refresh"
             >
               Reset
             </Button>
@@ -155,8 +217,11 @@ export const FilterModal = ({
                 onClose();
               }}
               style={styles.footerBtn}
+              contentStyle={styles.footerBtnContent}
+              labelStyle={{ fontSize: normalize(14), fontWeight: '700' }}
+              icon="check"
             >
-              Apply
+              Apply Filters
             </Button>
           </View>
         </View>
@@ -172,63 +237,86 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
   content: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
-    paddingBottom: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '82%',
+  },
+  dragHandleWrapper: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: SCREEN_PADDING,
+    paddingVertical: 14,
     borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+  closeBtn: {
+    minWidth: MIN_TOUCH_SIZE,
+    minHeight: MIN_TOUCH_SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeBtnInner: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollBody: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: SCREEN_PADDING,
+    paddingVertical: 12,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 22,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 10,
+    fontWeight: '700',
+    marginBottom: 12,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    minHeight: 36,
   },
-  chipText: {
-    fontSize: 13,
-  },
+  chipText: {},
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: SCREEN_PADDING,
+    paddingTop: 14,
     borderTopWidth: 1,
+    gap: 12,
   },
   footerBtn: {
     flex: 1,
-    marginHorizontal: 6,
+  },
+  footerBtnContent: {
+    height: 48,
   },
 });

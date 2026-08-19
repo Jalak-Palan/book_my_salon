@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, Pressable, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Image, Pressable, SafeAreaView, Platform } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator, DrawerItemList } from '@react-navigation/drawer';
 import { useTheme, Divider } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { normalize, TAB_BAR_HEIGHT } from '../utils/dimensions';
 
 import { AppContext } from '../context/AppContext';
 
@@ -67,18 +68,21 @@ function CustomDrawerContent(props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.surface }}>
       {/* Profile Header */}
-      <View style={[styles.drawerHeader, { borderBottomColor: theme.colors.outline + '40' }]}>
+      <View style={[styles.drawerHeader, { backgroundColor: theme.colors.primary, borderBottomColor: theme.colors.outline + '40' }]}>
         {userProfile.image ? (
           <Image source={{ uri: userProfile.image }} style={styles.drawerAvatar} />
         ) : (
-          <View style={[styles.drawerAvatarPlaceholder, { backgroundColor: theme.colors.primaryContainer }]}>
-            <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
+          <View style={[styles.drawerAvatarPlaceholder, { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
+            <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: normalize(22) }}>
               {userProfile.name ? userProfile.name.charAt(0).toUpperCase() : '?'}
             </Text>
           </View>
         )}
-        <Text style={[styles.drawerName, { color: theme.colors.onSurface }]}>{userProfile.name}</Text>
-        <Text style={[styles.drawerBusiness, { color: theme.colors.primary }]}>{userProfile.businessName}</Text>
+        <Text style={[styles.drawerName, { color: '#ffffff', fontSize: normalize(16) }]}>{userProfile.name}</Text>
+        <View style={styles.drawerBusinessBadge}>
+          <MaterialCommunityIcons name="store-outline" size={12} color={theme.colors.primary} />
+          <Text style={[styles.drawerBusiness, { color: theme.colors.primary, fontSize: normalize(12) }]}>{userProfile.businessName}</Text>
+        </View>
       </View>
 
       <ScrollView {...props} contentContainerStyle={{ paddingVertical: 10 }}>
@@ -87,8 +91,10 @@ function CustomDrawerContent(props) {
         <Divider style={{ marginVertical: 10, marginHorizontal: 16 }} />
         
         <Pressable onPress={handleLogout} style={styles.logoutBtn}>
-          <MaterialCommunityIcons name="logout" size={22} color={theme.colors.error} />
-          <Text style={[styles.logoutText, { color: theme.colors.error }]}>Logout</Text>
+          <View style={[styles.logoutIconWrap, { backgroundColor: theme.colors.error + '15' }]}>
+            <MaterialCommunityIcons name="logout" size={20} color={theme.colors.error} />
+          </View>
+          <Text style={[styles.logoutText, { color: theme.colors.error, fontSize: normalize(14) }]}>Sign Out</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -107,23 +113,38 @@ function BottomTabNavigator() {
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.outline + '40',
-          height: 60,
-          paddingBottom: 8,
+          borderTopColor: theme.colors.outline + '30',
+          borderTopWidth: 1,
+          height: TAB_BAR_HEIGHT,
+          paddingBottom: Platform.OS === 'ios' ? 22 : 10,
           paddingTop: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          elevation: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
+          fontSize: normalize(10),
+          fontWeight: '700',
+          letterSpacing: 0.2,
+          marginTop: 2,
         },
-        tabBarIcon: ({ color, size }) => {
+        tabBarIconStyle: {
+          marginTop: 2,
+        },
+        tabBarIcon: ({ color, focused, size }) => {
           let iconName;
-          if (route.name === 'DashboardTab') iconName = 'view-dashboard-outline';
-          else if (route.name === 'ProductsTab') iconName = 'cube-outline';
-          else if (route.name === 'SalesTab') iconName = 'currency-usd';
-          else if (route.name === 'PurchaseTab') iconName = 'cart-arrow-down';
-          else if (route.name === 'ProfileTab') iconName = 'account-outline';
-          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+          if (route.name === 'DashboardTab') iconName = focused ? 'view-dashboard' : 'view-dashboard-outline';
+          else if (route.name === 'ProductsTab') iconName = focused ? 'cube' : 'cube-outline';
+          else if (route.name === 'SalesTab') iconName = focused ? 'currency-usd' : 'currency-usd';
+          else if (route.name === 'PurchaseTab') iconName = focused ? 'cart-arrow-down' : 'cart-outline';
+          else if (route.name === 'ProfileTab') iconName = focused ? 'account' : 'account-outline';
+          return (
+            <View style={[focused && { backgroundColor: theme.colors.primaryContainer, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 3 }]}>
+              <MaterialCommunityIcons name={iconName} size={24} color={color} />
+            </View>
+          );
         },
       })}
     >
@@ -323,46 +344,67 @@ export default function AppNavigator() {
 
 const styles = StyleSheet.create({
   drawerHeader: {
-    padding: 20,
+    padding: 22,
+    paddingTop: Platform.OS === 'ios' ? 52 : 30,
+    paddingBottom: 22,
     justifyContent: 'center',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     marginBottom: 8,
   },
   drawerAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: 10,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    marginBottom: 12,
     resizeMode: 'cover',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
   drawerAvatarPlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: 10,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    marginBottom: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   drawerName: {
-    fontSize: 15,
     fontWeight: 'bold',
+    letterSpacing: 0.2,
+  },
+  drawerBusinessBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginTop: 6,
+    gap: 4,
   },
   drawerBusiness: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 2,
+    fontWeight: '700',
   },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-    paddingHorizontal: 20,
-    marginTop: 10,
+    paddingHorizontal: 18,
+    marginTop: 6,
+    gap: 12,
+  },
+  logoutIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logoutText: {
-    fontSize: 14,
     fontWeight: '700',
-    marginLeft: 12,
   },
 });
 

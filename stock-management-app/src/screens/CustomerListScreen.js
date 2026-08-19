@@ -6,6 +6,8 @@ import { AppContext } from '../context/AppContext';
 import { EmptyState } from '../components/EmptyState';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { CustomCard } from '../components/CustomCard';
+import { SearchBar } from '../components/SearchBar';
+import { normalize, MIN_TOUCH_SIZE, SCREEN_PADDING } from '../utils/dimensions';
 
 export default function CustomerListScreen({ navigation }) {
   const theme = useTheme();
@@ -13,6 +15,7 @@ export default function CustomerListScreen({ navigation }) {
 
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleDeletePress = (cust) => {
     setCustomerToDelete(cust);
@@ -35,46 +38,90 @@ export default function CustomerListScreen({ navigation }) {
     Linking.openURL(`mailto:${email}`).catch(() => {});
   };
 
+  const filteredCustomers = customers.filter((c) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      c.name?.toLowerCase().includes(q) ||
+      c.phone?.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q)
+    );
+  });
+
+  const getInitials = (name) =>
+    name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+
+  // Generate a deterministic color based on name
+  const getAvatarColor = (name) => {
+    const colors = ['#6366F1', '#0D9488', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#10B981'];
+    const idx = (name.charCodeAt(0) || 0) % colors.length;
+    return colors[idx];
+  };
+
   const renderCustomerItem = ({ item }) => {
+    const avatarColor = getAvatarColor(item.name);
     return (
       <CustomCard style={styles.card}>
-        <View style={styles.headerRow}>
-          <View style={styles.avatarContainer}>
-            <View style={[styles.avatarCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
-              <Text style={[styles.avatarText, { color: theme.colors.secondary }]}>
-                {item.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-              </Text>
-            </View>
-            <View style={styles.nameSection}>
-              <Text style={[styles.name, { color: theme.colors.onSurface }]}>{item.name}</Text>
-              <Text style={[styles.phoneText, { color: theme.colors.onSurfaceVariant }]} onPress={() => handleCall(item.phone)}>
-                {item.phone}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.actions}>
-            <Pressable
-              onPress={() => navigation.navigate('AddEditCustomer', { customerId: item.id })}
-              style={styles.actionBtn}
-            >
-              <MaterialCommunityIcons name="pencil-outline" size={20} color={theme.colors.primary} />
-            </Pressable>
-            <Pressable onPress={() => handleDeletePress(item)} style={styles.actionBtn}>
-              <MaterialCommunityIcons name="trash-can-outline" size={20} color={theme.colors.error} />
-            </Pressable>
-          </View>
-        </View>
+        {/* Left color accent */}
+        <View style={[styles.accentBar, { backgroundColor: avatarColor }]} />
 
-        <View style={[styles.detailSection, { borderTopColor: theme.colors.outline + '40' }]}>
-          <View style={styles.detailRow}>
-            <MaterialCommunityIcons name="email-outline" size={16} color={theme.colors.onSurfaceVariant} />
-            <Text style={[styles.detailText, { color: theme.colors.onSurface }]} onPress={() => handleEmail(item.email)}>
-              {item.email}
-            </Text>
+        <View style={styles.cardContent}>
+          <View style={styles.headerRow}>
+            <View style={styles.avatarContainer}>
+              <View style={[styles.avatarCircle, { backgroundColor: avatarColor }]}>
+                <Text style={styles.avatarText}>{getInitials(item.name)}</Text>
+              </View>
+              <View style={styles.nameSection}>
+                <Text style={[styles.name, { color: theme.colors.onSurface, fontSize: normalize(15) }]}>
+                  {item.name}
+                </Text>
+                <Pressable onPress={() => handleCall(item.phone)} hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}>
+                  <Text style={[styles.phoneText, { color: theme.colors.primary, fontSize: normalize(13) }]}>
+                    {item.phone}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+            <View style={styles.actions}>
+              <Pressable
+                onPress={() => navigation.navigate('AddEditCustomer', { customerId: item.id })}
+                style={styles.actionBtn}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              >
+                <View style={[styles.actionBtnInner, { backgroundColor: theme.colors.primary + '15' }]}>
+                  <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.colors.primary} />
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => handleDeletePress(item)}
+                style={styles.actionBtn}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              >
+                <View style={[styles.actionBtnInner, { backgroundColor: theme.colors.error + '15' }]}>
+                  <MaterialCommunityIcons name="trash-can-outline" size={18} color={theme.colors.error} />
+                </View>
+              </Pressable>
+            </View>
           </View>
-          <View style={[styles.detailRow, { marginTop: 6 }]}>
-            <MaterialCommunityIcons name="map-marker-outline" size={16} color={theme.colors.onSurfaceVariant} />
-            <Text style={[styles.detailText, { color: theme.colors.onSurfaceVariant }]}>{item.address}</Text>
+
+          <View style={[styles.detailSection, { borderTopColor: theme.colors.outline + '40' }]}>
+            <Pressable style={styles.detailRow} onPress={() => handleEmail(item.email)}>
+              <View style={[styles.detailIconWrap, { backgroundColor: theme.colors.primaryContainer }]}>
+                <MaterialCommunityIcons name="email-outline" size={15} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.detailText, { color: theme.colors.primary, fontSize: normalize(13) }]}>
+                {item.email}
+              </Text>
+            </Pressable>
+            {item.address ? (
+              <View style={[styles.detailRow, { marginTop: 8 }]}>
+                <View style={[styles.detailIconWrap, { backgroundColor: theme.colors.surfaceVariant }]}>
+                  <MaterialCommunityIcons name="map-marker-outline" size={15} color={theme.colors.onSurfaceVariant} />
+                </View>
+                <Text style={[styles.detailText, { color: theme.colors.onSurfaceVariant, fontSize: normalize(13) }]}>
+                  {item.address}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </CustomCard>
@@ -83,8 +130,15 @@ export default function CustomerListScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SearchBar
+        placeholder="Search by name, phone, email..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        style={styles.searchBar}
+      />
+
       <FlatList
-        data={customers}
+        data={filteredCustomers}
         renderItem={renderCustomerItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
@@ -92,10 +146,14 @@ export default function CustomerListScreen({ navigation }) {
         ListEmptyComponent={
           <EmptyState
             icon="account-off-outline"
-            title="No Customers Found"
-            description="Manage client relationships by adding customer contact cards."
-            actionTitle="Add Customer"
-            onActionPress={() => navigation.navigate('AddEditCustomer')}
+            title={searchQuery ? 'No Customers Found' : 'No Customers Yet'}
+            description={
+              searchQuery
+                ? `No customers match "${searchQuery}".`
+                : 'Manage client relationships by adding customer contact cards.'
+            }
+            actionTitle={searchQuery ? undefined : 'Add Customer'}
+            onActionPress={searchQuery ? undefined : () => navigation.navigate('AddEditCustomer')}
           />
         }
       />
@@ -105,6 +163,7 @@ export default function CustomerListScreen({ navigation }) {
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         color="#ffffff"
         onPress={() => navigation.navigate('AddEditCustomer')}
+        size="medium"
       />
 
       <ConfirmationDialog
@@ -125,12 +184,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  searchBar: {
+    marginHorizontal: SCREEN_PADDING,
+    marginTop: 12,
+    marginBottom: 2,
+  },
   listContainer: {
-    padding: 16,
-    paddingBottom: 80,
+    paddingHorizontal: SCREEN_PADDING,
+    paddingBottom: 96,
+    paddingTop: 4,
   },
   card: {
     marginVertical: 6,
+    overflow: 'hidden',
+  },
+  accentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
+  cardContent: {
+    paddingLeft: 14,
   },
   headerRow: {
     flexDirection: 'row',
@@ -144,48 +222,65 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   avatarText: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   nameSection: {
     flex: 1,
   },
   name: {
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    marginBottom: 2,
   },
   phoneText: {
-    fontSize: 13,
-    marginTop: 2,
+    fontWeight: '600',
     textDecorationLine: 'underline',
   },
   actions: {
     flexDirection: 'row',
+    gap: 8,
   },
   actionBtn: {
-    padding: 6,
-    marginLeft: 6,
+    minWidth: MIN_TOUCH_SIZE,
+    minHeight: MIN_TOUCH_SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionBtnInner: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   detailSection: {
-    paddingTop: 8,
+    paddingTop: 10,
     borderTopWidth: 1,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  detailIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   detailText: {
-    fontSize: 13,
-    marginLeft: 8,
     flex: 1,
+    fontWeight: '500',
   },
   fab: {
     position: 'absolute',
